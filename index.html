@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudentFinance - Smart Money Management for Students</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+</head>
+
+<body>
+
+    <!-- Loading Bar -->
+    <div id="loading-overlay" class="loading-bar" style="display:none">
+        <div class="loading-bar-inner"></div>
+    </div>
+
+    <!-- Landing Page -->
+    <div id="landing-page" class="landing-page" style="display:none">
+        <nav class="landing-nav">
+            <div class="nav-logo">
+                <i class="ri-wallet-3-fill"></i>
+                <span>StudentFinance</span>
+            </div>
+            <div class="nav-actions">
+                <button class="btn btn-primary" onclick="showAuth()">Get Started Free</button>
+            </div>
+        </nav>
+
+        <section class="hero">
+            <div class="hero-content">
+                <div class="hero-badge">Made for Students, By Students</div>
+                <h1>Take Control of Your <span class="gradient-text">Finances</span> Today</h1>
+                <p class="hero-desc">Track expenses, plan budgets, and reach your savings goals — all in one beautifully
+                    simple app designed for student life.</p>
+                <div class="hero-actions">
+                    <button class="btn btn-primary btn-lg" onclick="showAuth()">
+                        <span>Start Free</span>
+                        <i class="ri-arrow-right-line"></i>
+                    </button>
+                    <button class="btn btn-ghost btn-lg" onclick="showAuth()">
+                        <i class="ri-play-circle-line"></i>
+                        <span>See How It Works</span>
+                    </button>
+                </div>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <strong>10K+</strong>
+                        <span>Students</span>
+                    </div>
+                    <div class="hero-stat">
+                        <strong>৳2M+</strong>
+                        <span>Saved</span>
+                    </div>
+                    <div class="hero-stat">
+                        <strong>4.9</strong>
+                        <span>Rating</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="dashboard-preview">
+                    <div class="preview-header">
+                        <div class="preview-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                    </div>
+                    <div class="preview-body">
+                        <div class="preview-card preview-balance">
+                            <span class="preview-label">Monthly Budget</span>
+                            <span class="preview-value">৳1,500.00</span>
+                            <div class="preview-bar">
+                                <div class="preview-bar-fill" style="width:65%"></div>
+                            </div>
+                        </div>
+                        <div class="preview-row">
+                            <div class="preview-card mini">
+                                <i class="ri-arrow-down-line"></i>
+                                <span>Income</span>
+                                <strong>৳1,500</strong>
+                            </div>
+                            <div class="preview-card mini">
+                                <i class="ri-arrow-up-line"></i>
+                                <span>Spent</span>
+                                <strong>৳975</strong>
+                            </div>
+                        </div>
+                        <div class="preview-card">
+                            <span class="preview-label">Savings Goal</span>
+                            <div class="preview-savings">
+                                <div class="savings-ring" style="--progress: 72%">
+                                    <svg viewBox="0 0 36 36">
+                                        <path
+                                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                            fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-dasharray="72, 100" />
+                                    </svg>
+                                    <span>72%</span>
+                                </div>
+                                <span class="preview-value">৳360 / ৳500</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="features-section">
+            <div class="section-header">
+                <h2>Everything You Need to <span class="gradient-text">Manage Money</span></h2>
+                <p>Powerful features designed specifically for student finances</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="ri-money-dollar-circle-line"></i></div>
+                    <h3>Expense Tracking</h3>
+                    <p>Log daily expenses effortlessly with smart categorization and instant summaries.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="ri-pie-chart-2-line"></i></div>
+                    <h3>Budget Planning</h3>
+                    <p>Set monthly budgets by category and get alerts before you overspend.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="ri-safe-2-line"></i></div>
+                    <h3>Savings Goals</h3>
+                    <p>Set goals, track progress, and stay motivated with visual milestones.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="ri-bar-chart-grouped-line"></i></div>
+                    <h3>Smart Analytics</h3>
+                    <p>Understand spending patterns with beautiful charts and smart insights.</p>
+                </div>
+            </div>
+        </section>
+
+        <footer class="landing-footer">
+            <p>&copy; 2026 StudentFinance. Built with care for students everywhere.</p>
+        </footer>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="modal-overlay" style="display:none">
+        <div class="auth-container">
+            <button class="modal-close" onclick="closeAuth()"><i class="ri-close-line"></i></button>
+            <div class="auth-header">
+                <i class="ri-wallet-3-fill auth-logo"></i>
+                <h2>Welcome to StudentFinance</h2>
+                <p>Sign in with your Gmail account to get started</p>
+            </div>
+            <button type="button" class="btn btn-gmail btn-block" onclick="handleGoogleSignIn()">
+                <svg width="18" height="18" viewBox="0 0 48 48">
+                    <path fill="#EA4335"
+                        d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+                    <path fill="#4285F4"
+                        d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+                    <path fill="#FBBC05"
+                        d="M10.53 28.59a14.5 14.5 0 0 1 0-9.18l-7.98-6.19a24.08 24.08 0 0 0 0 21.56l7.98-6.19z" />
+                    <path fill="#34A853"
+                        d="M24 48c6.48 0 11.93-2.15 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+                </svg>
+                <span>Continue with Gmail</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app-container" class="app-container" style="display:none">
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i class="ri-wallet-3-fill"></i>
+                    <span>StudentFinance</span>
+                </div>
+                <button class="sidebar-toggle" onclick="toggleSidebar()"><i class="ri-menu-line"></i></button>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard', event)">
+                    <i class="ri-dashboard-3-line"></i><span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-page="expenses" onclick="navigateTo('expenses', event)">
+                    <i class="ri-receipt-line"></i><span>Expenses</span>
+                </a>
+                <a href="#" class="nav-item" data-page="budget" onclick="navigateTo('budget', event)">
+                    <i class="ri-pie-chart-2-line"></i><span>Budget</span>
+                </a>
+                <a href="#" class="nav-item" data-page="savings" onclick="navigateTo('savings', event)">
+                    <i class="ri-safe-2-line"></i><span>Savings</span>
+                </a>
+                <a href="#" class="nav-item" data-page="debts" onclick="navigateTo('debts', event)">
+                    <i class="ri-exchange-line"></i><span>Borrow & Lend</span>
+                </a>
+                <a href="#" class="nav-item" data-page="group" onclick="navigateTo('group', event)">
+                    <i class="ri-team-line"></i><span>Group Split</span>
+                </a>
+                <a href="#" class="nav-item" data-page="analytics" onclick="navigateTo('analytics', event)">
+                    <i class="ri-bar-chart-grouped-line"></i><span>Analytics</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-tip">
+                    <i class="ri-lightbulb-line"></i>
+                    <p id="daily-tip">Track every expense, no matter how small!</p>
+                </div>
+                <div class="sidebar-user">
+                    <div class="user-avatar" id="user-avatar">S</div>
+                    <div class="user-info">
+                        <span class="user-name" id="user-name">Student</span>
+                        <span class="user-email" id="user-email">student@uni.edu</span>
+                    </div>
+                    <button class="btn-icon" onclick="logout()" title="Log Out"><i
+                            class="ri-logout-box-r-line"></i></button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <button class="mobile-menu-btn" onclick="toggleSidebar()"><i class="ri-menu-line"></i></button>
+                    <h2 id="page-title">Dashboard</h2>
+                </div>
+                <div class="top-bar-right">
+                    <div class="currency-selector">
+                        <select id="currency-select" onchange="changeCurrency(this.value)">
+                            <option value="BDT">BDT ৳</option>
+                            <option value="USD">USD $</option>
+                            <option value="EUR">EUR €</option>
+                            <option value="GBP">GBP £</option>
+                            <option value="INR">INR ₹</option>
+                            <option value="JPY">JPY ¥</option>
+                        </select>
+                    </div>
+                    <button class="btn-icon theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+                        <i class="ri-sun-line" id="theme-icon"></i>
+                    </button>
+                    <div class="notification-bell" onclick="toggleNotifications()">
+                        <i class="ri-notification-3-line"></i>
+                        <span class="notification-badge" id="notif-badge" style="display:none">0</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Notification Panel -->
+            <div class="notification-panel" id="notif-panel" style="display:none">
+                <div class="notif-header">
+                    <h3>Notifications</h3>
+                    <button onclick="clearNotifications()">Clear All</button>
+                </div>
+                <div class="notif-list" id="notif-list">
+                    <p class="notif-empty">No notifications</p>
+                </div>
+            </div>
+
+            <!-- Page: Dashboard -->
+            <section class="page active" id="page-dashboard">
+                <div class="summary-cards">
+                    <div class="summary-card income-card">
+                        <div class="card-icon"><i class="ri-wallet-3-line"></i></div>
+                        <div class="card-info">
+                            <span class="card-label">Monthly Budget</span>
+                            <span class="card-value" data-counter="budget">$0.00</span>
+                        </div>
+                        <div class="card-trend up"><i class="ri-arrow-up-s-line"></i> Budget set</div>
+                    </div>
+                    <div class="summary-card expense-card">
+                        <div class="card-icon"><i class="ri-arrow-up-circle-line"></i></div>
+                        <div class="card-info">
+                            <span class="card-label">Total Spent</span>
+                            <span class="card-value" data-counter="spent">$0.00</span>
+                        </div>
+                        <div class="card-trend" id="spent-trend"><i class="ri-arrow-down-s-line"></i> This month</div>
+                    </div>
+                    <div class="summary-card balance-card">
+                        <div class="card-icon"><i class="ri-bank-line"></i></div>
+                        <div class="card-info">
+                            <span class="card-label">Remaining</span>
+                            <span class="card-value" data-counter="remaining">$0.00</span>
+                        </div>
+                        <div class="card-trend">Balance left</div>
+                    </div>
+                    <div class="summary-card savings-card">
+                        <div class="card-icon"><i class="ri-safe-2-line"></i></div>
+                        <div class="card-info">
+                            <span class="card-label">Total Savings</span>
+                            <span class="card-value" data-counter="savings">$0.00</span>
+                        </div>
+                        <div class="card-trend up"><i class="ri-arrow-up-s-line"></i> Growing</div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="dash-card chart-card">
+                        <div class="card-header">
+                            <h3>Spending Overview</h3>
+                            <select id="dash-chart-period" onchange="updateDashChart()">
+                                <option value="week">This Week</option>
+                                <option value="month" selected>This Month</option>
+                            </select>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="dash-spending-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="dash-card">
+                        <div class="card-header">
+                            <h3>Savings Progress</h3>
+                        </div>
+                        <div class="savings-preview-list" id="dash-savings-list">
+                            <p class="empty-state-sm">No savings goals yet</p>
+                        </div>
+                    </div>
+                    <div class="dash-card">
+                        <div class="card-header">
+                            <h3>Recent Expenses</h3>
+                            <a href="#" class="link-btn" onclick="navigateTo('expenses', event)">View All</a>
+                        </div>
+                        <div class="recent-expenses-list" id="dash-recent-expenses">
+                            <p class="empty-state-sm">No expenses recorded yet</p>
+                        </div>
+                    </div>
+                    <div class="dash-card">
+                        <div class="card-header">
+                            <h3>Budget Status</h3>
+                        </div>
+                        <div class="budget-preview-list" id="dash-budget-list">
+                            <p class="empty-state-sm">No budgets set yet</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="insight-banner" id="insight-banner" style="display:none">
+                    <i class="ri-sparkling-line"></i>
+                    <p id="insight-text"></p>
+                </div>
+            </section>
+
+            <!-- Page: Expenses -->
+            <section class="page" id="page-expenses">
+                <div class="page-header-row">
+                    <div class="page-filters">
+                        <select id="expense-filter-period" onchange="filterExpenses()">
+                            <option value="all">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month" selected>This Month</option>
+                        </select>
+                        <select id="expense-filter-category" onchange="filterExpenses()">
+                            <option value="all">All Categories</option>
+                            <option value="food">🍕 Food</option>
+                            <option value="transport">🚗 Transport</option>
+                            <option value="rent">🏠 Rent</option>
+                            <option value="shopping">🛍️ Shopping</option>
+                            <option value="study">📚 Study Materials</option>
+                            <option value="entertainment">🎮 Entertainment</option>
+                            <option value="bills">💡 Bills</option>
+                            <option value="health">💊 Health</option>
+                            <option value="other">📦 Other</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="openExpenseModal()">
+                        <i class="ri-add-line"></i> Add Expense
+                    </button>
+                </div>
+
+                <div class="expenses-summary-bar">
+                    <div class="exp-sum-item">
+                        <span class="exp-sum-label">Total</span>
+                        <span class="exp-sum-value" id="exp-total">$0.00</span>
+                    </div>
+                    <div class="exp-sum-item">
+                        <span class="exp-sum-label">Count</span>
+                        <span class="exp-sum-value" id="exp-count">0</span>
+                    </div>
+                    <div class="exp-sum-item">
+                        <span class="exp-sum-label">Average</span>
+                        <span class="exp-sum-value" id="exp-avg">$0.00</span>
+                    </div>
+                </div>
+
+                <div class="expenses-list" id="expenses-list">
+                    <div class="empty-state">
+                        <i class="ri-receipt-line"></i>
+                        <h3>No Expenses Yet</h3>
+                        <p>Start tracking your expenses by adding your first one!</p>
+                        <button class="btn btn-primary" onclick="openExpenseModal()">Add Your First Expense</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page: Budget -->
+            <section class="page" id="page-budget">
+                <div class="page-header-row">
+                    <div class="budget-month-nav">
+                        <button class="btn-icon" onclick="changeBudgetMonth(-1)"><i
+                                class="ri-arrow-left-s-line"></i></button>
+                        <h3 id="budget-month-label"></h3>
+                        <button class="btn-icon" onclick="changeBudgetMonth(1)"><i
+                                class="ri-arrow-right-s-line"></i></button>
+                    </div>
+                    <button class="btn btn-primary" onclick="openBudgetModal()">
+                        <i class="ri-add-line"></i> Set Budget
+                    </button>
+                </div>
+
+                <div class="budget-overview-card">
+                    <div class="budget-ov-item">
+                        <span class="budget-ov-label">Total Budget</span>
+                        <span class="budget-ov-value" id="budget-total">$0.00</span>
+                    </div>
+                    <div class="budget-ov-item">
+                        <span class="budget-ov-label">Total Spent</span>
+                        <span class="budget-ov-value" id="budget-spent">$0.00</span>
+                    </div>
+                    <div class="budget-ov-item">
+                        <span class="budget-ov-label">Remaining</span>
+                        <span class="budget-ov-value" id="budget-remaining">$0.00</span>
+                    </div>
+                    <div class="budget-ov-progress">
+                        <div class="progress-bar-large">
+                            <div class="progress-fill" id="budget-overall-progress" style="width:0%"></div>
+                        </div>
+                        <span id="budget-overall-pct">0%</span>
+                    </div>
+                </div>
+
+                <div class="budget-categories-grid" id="budget-categories-list">
+                    <div class="empty-state">
+                        <i class="ri-pie-chart-2-line"></i>
+                        <h3>No Budgets Set</h3>
+                        <p>Create your first budget to start managing your spending!</p>
+                        <button class="btn btn-primary" onclick="openBudgetModal()">Set Your Budget</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page: Savings -->
+            <section class="page" id="page-savings">
+                <div class="page-header-row">
+                    <h3>Your Savings Goals</h3>
+                    <button class="btn btn-primary" onclick="openSavingsModal()">
+                        <i class="ri-add-line"></i> New Goal
+                    </button>
+                </div>
+
+                <div class="savings-total-banner">
+                    <div class="savings-total-info">
+                        <span>Total Saved</span>
+                        <strong id="savings-total-amount">$0.00</strong>
+                    </div>
+                    <div class="savings-total-info">
+                        <span>Total Target</span>
+                        <strong id="savings-total-target">$0.00</strong>
+                    </div>
+                    <div class="savings-total-info">
+                        <span>Overall Progress</span>
+                        <strong id="savings-total-progress">0%</strong>
+                    </div>
+                </div>
+
+                <div class="savings-goals-grid" id="savings-goals-list">
+                    <div class="empty-state">
+                        <i class="ri-safe-2-line"></i>
+                        <h3>No Savings Goals</h3>
+                        <p>Set a savings goal and start building your future!</p>
+                        <button class="btn btn-primary" onclick="openSavingsModal()">Create First Goal</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page: Analytics -->
+            <section class="page" id="page-analytics">
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <div class="card-header">
+                            <h3>Spending by Category</h3>
+                        </div>
+                        <div class="chart-wrapper chart-square">
+                            <canvas id="analytics-category-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="analytics-card">
+                        <div class="card-header">
+                            <h3>Monthly Trends</h3>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="analytics-trend-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="analytics-card">
+                        <div class="card-header">
+                            <h3>Budget vs Actual</h3>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="analytics-budget-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="analytics-card">
+                        <div class="card-header">
+                            <h3>Smart Insights</h3>
+                        </div>
+                        <div class="insights-list" id="insights-list">
+                            <p class="empty-state-sm">Add more data to see insights</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page: Borrow & Lend -->
+            <section class="page" id="page-debts">
+                <div class="page-header-row">
+                    <div class="page-filters">
+                        <select id="debt-filter-type" onchange="updateDebtsPage()">
+                            <option value="all">All Records</option>
+                            <option value="lent">I Lent</option>
+                            <option value="borrowed">I Borrowed</option>
+                        </select>
+                        <select id="debt-filter-status" onchange="updateDebtsPage()">
+                            <option value="all">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="repaid">Repaid</option>
+                        </select>
+                        <div class="input-wrapper debt-search-wrapper">
+                            <i class="ri-search-line"></i>
+                            <input type="text" id="debt-search" placeholder="Search person..."
+                                oninput="updateDebtsPage()">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="openDebtModal()">
+                        <i class="ri-add-line"></i> Add Record
+                    </button>
+                </div>
+
+                <div class="debt-summary-cards">
+                    <div class="debt-summary-card debt-lent-card">
+                        <div class="debt-card-icon lent"><i class="ri-arrow-up-line"></i></div>
+                        <div class="debt-card-info">
+                            <span class="debt-card-label">Total Lent</span>
+                            <span class="debt-card-value" id="debt-total-lent">$0.00</span>
+                        </div>
+                    </div>
+                    <div class="debt-summary-card debt-borrowed-card">
+                        <div class="debt-card-icon borrowed"><i class="ri-arrow-down-line"></i></div>
+                        <div class="debt-card-info">
+                            <span class="debt-card-label">Total Borrowed</span>
+                            <span class="debt-card-value" id="debt-total-borrowed">$0.00</span>
+                        </div>
+                    </div>
+                    <div class="debt-summary-card debt-pending-receive-card">
+                        <div class="debt-card-icon pending-receive"><i class="ri-time-line"></i></div>
+                        <div class="debt-card-info">
+                            <span class="debt-card-label">Pending to Receive</span>
+                            <span class="debt-card-value" id="debt-pending-receive">$0.00</span>
+                        </div>
+                    </div>
+                    <div class="debt-summary-card debt-pending-pay-card">
+                        <div class="debt-card-icon pending-pay"><i class="ri-error-warning-line"></i></div>
+                        <div class="debt-card-info">
+                            <span class="debt-card-label">Pending to Pay</span>
+                            <span class="debt-card-value" id="debt-pending-pay">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="debts-list" id="debts-list">
+                    <div class="empty-state">
+                        <i class="ri-exchange-line"></i>
+                        <h3>No Records Yet</h3>
+                        <p>Track money you lend or borrow with friends!</p>
+                        <button class="btn btn-primary" onclick="openDebtModal()">Add First Record</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page: Group Expenses (Trip Split) -->
+            <section class="page" id="page-group">
+                <div class="page-header-row">
+                    <h3>Your Groups</h3>
+                    <button class="btn btn-primary" onclick="openGroupModal()">
+                        <i class="ri-add-line"></i> New Group
+                    </button>
+                </div>
+                <div id="group-list" class="group-list">
+                    <div class="empty-state">
+                        <i class="ri-team-line"></i>
+                        <h3>No Groups Yet</h3>
+                        <p>Create a group to start splitting expenses with friends!</p>
+                        <button class="btn btn-primary" onclick="openGroupModal()">Create First Group</button>
+                    </div>
+                </div>
+                <div id="group-detail" class="group-detail" style="display:none"></div>
+            </section>
+
+        </main>
+
+        <!-- Mobile Bottom Nav -->
+        <nav class="mobile-nav">
+            <a href="#" class="mobile-nav-item active" data-page="dashboard" onclick="navigateTo('dashboard', event)">
+                <i class="ri-dashboard-3-line"></i><span>Home</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-page="expenses" onclick="navigateTo('expenses', event)">
+                <i class="ri-receipt-line"></i><span>Expenses</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-page="budget" onclick="navigateTo('budget', event)">
+                <i class="ri-pie-chart-2-line"></i><span>Budget</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-page="savings" onclick="navigateTo('savings', event)">
+                <i class="ri-safe-2-line"></i><span>Savings</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-page="debts" onclick="navigateTo('debts', event)">
+                <i class="ri-exchange-line"></i><span>Debts</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-page="group" onclick="navigateTo('group', event)">
+                <i class="ri-team-line"></i><span>Group</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-page="analytics" onclick="navigateTo('analytics', event)">
+                <i class="ri-bar-chart-grouped-line"></i><span>Analytics</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Expense Modal -->
+    <div id="expense-modal" class="modal-overlay" style="display:none">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="expense-modal-title">Add Expense</h3>
+                <button class="modal-close" onclick="closeExpenseModal()"><i class="ri-close-line"></i></button>
+            </div>
+            <form onsubmit="saveExpense(event)">
+                <input type="hidden" id="expense-edit-id">
+                <div class="form-group">
+                    <label>Description</label>
+                    <div class="input-wrapper">
+                        <i class="ri-file-text-line"></i>
+                        <input type="text" id="expense-desc" placeholder="e.g. Lunch at cafeteria" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Amount</label>
+                        <div class="input-wrapper">
+                            <i class="ri-money-dollar-circle-line"></i>
+                            <input type="number" id="expense-amount" placeholder="0.00" step="0.01" min="0.01" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <div class="input-wrapper">
+                            <i class="ri-price-tag-3-line"></i>
+                            <select id="expense-category" required>
+                                <option value="">Select</option>
+                                <option value="food">🍕 Food</option>
+                                <option value="transport">🚗 Transport</option>
+                                <option value="rent">🏠 Rent</option>
+                                <option value="shopping">🛍️ Shopping</option>
+                                <option value="study">📚 Study Materials</option>
+                                <option value="entertainment">🎮 Entertainment</option>
+                                <option value="bills">💡 Bills</option>
+                                <option value="health">💊 Health</option>
+                                <option value="other">📦 Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date</label>
+                        <div class="input-wrapper">
+                            <i class="ri-calendar-line"></i>
+                            <input type="date" id="expense-date" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Recurring</label>
+                        <div class="input-wrapper">
+                            <i class="ri-repeat-line"></i>
+                            <select id="expense-recurring">
+                                <option value="none">One-time</option>
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Notes (optional)</label>
+                    <div class="input-wrapper">
+                        <i class="ri-sticky-note-line"></i>
+                        <input type="text" id="expense-notes" placeholder="Additional details...">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Save Expense</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Budget Modal -->
+    <div id="budget-modal" class="modal-overlay" style="display:none">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="budget-modal-title">Set Budget</h3>
+                <button class="modal-close" onclick="closeBudgetModal()"><i class="ri-close-line"></i></button>
+            </div>
+            <form onsubmit="saveBudget(event)">
+                <input type="hidden" id="budget-edit-id">
+                <div class="form-group">
+                    <label>Category</label>
+                    <div class="input-wrapper">
+                        <i class="ri-price-tag-3-line"></i>
+                        <select id="budget-category" required>
+                            <option value="">Select category</option>
+                            <option value="food">🍕 Food</option>
+                            <option value="transport">🚗 Transport</option>
+                            <option value="rent">🏠 Rent</option>
+                            <option value="shopping">🛍️ Shopping</option>
+                            <option value="study">📚 Study Materials</option>
+                            <option value="entertainment">🎮 Entertainment</option>
+                            <option value="bills">💡 Bills</option>
+                            <option value="health">💊 Health</option>
+                            <option value="other">📦 Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Monthly Limit</label>
+                    <div class="input-wrapper">
+                        <i class="ri-money-dollar-circle-line"></i>
+                        <input type="number" id="budget-amount" placeholder="0.00" step="0.01" min="1" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Save Budget</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Savings Modal -->
+    <div id="savings-modal" class="modal-overlay" style="display:none">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="savings-modal-title">New Savings Goal</h3>
+                <button class="modal-close" onclick="closeSavingsModal()"><i class="ri-close-line"></i></button>
+            </div>
+            <form onsubmit="saveSavingsGoal(event)">
+                <input type="hidden" id="savings-edit-id">
+                <div class="form-group">
+                    <label>Goal Name</label>
+                    <div class="input-wrapper">
+                        <i class="ri-flag-line"></i>
+                        <input type="text" id="savings-name" placeholder="e.g. Emergency Fund" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Target Amount</label>
+                        <div class="input-wrapper">
+                            <i class="ri-money-dollar-circle-line"></i>
+                            <input type="number" id="savings-target" placeholder="0.00" step="0.01" min="1" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Saved So Far</label>
+                        <div class="input-wrapper">
+                            <i class="ri-safe-2-line"></i>
+                            <input type="number" id="savings-current" placeholder="0.00" step="0.01" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Target Date (optional)</label>
+                    <div class="input-wrapper">
+                        <i class="ri-calendar-line"></i>
+                        <input type="date" id="savings-deadline">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Icon</label>
+                    <div class="icon-picker">
+                        <label class="icon-option"><input type="radio" name="savings-icon" value="🎯"
+                                checked><span>🎯</span></label>
+                        <label class="icon-option"><input type="radio" name="savings-icon"
+                                value="🏠"><span>🏠</span></label>
+                        <label class="icon-option"><input type="radio" name="savings-icon"
+                                value="🚗"><span>🚗</span></label>
+                        <label class="icon-option"><input type="radio" name="savings-icon"
+                                value="✈️"><span>✈️</span></label>
+                        <label class="icon-option"><input type="radio" name="savings-icon"
+                                value="💻"><span>💻</span></label>
+                        <label class="icon-option"><input type="radio" name="savings-icon"
+                                value="🎓"><span>🎓</span></label>
+                        <label class="icon-option"><input type="radio" name="savings-icon"
+                                value="💍"><span>💍</span></label>
+                        <label class="icon-option"><input type="radio" name="savings-icon"
+                                value="📱"><span>📱</span></label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Save Goal</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add to Savings Modal -->
+    <div id="add-savings-modal" class="modal-overlay" style="display:none">
+        <div class="modal modal-sm">
+            <div class="modal-header">
+                <h3>Add to Savings</h3>
+                <button class="modal-close" onclick="closeAddSavingsModal()"><i class="ri-close-line"></i></button>
+            </div>
+            <form onsubmit="addToSavings(event)">
+                <input type="hidden" id="add-savings-id">
+                <div class="form-group">
+                    <label>Amount to Add</label>
+                    <div class="input-wrapper">
+                        <i class="ri-add-circle-line"></i>
+                        <input type="number" id="add-savings-amount" placeholder="0.00" step="0.01" min="0.01" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Add Amount</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Debt / Borrow & Lend Modal -->
+    <div id="debt-modal" class="modal-overlay" style="display:none">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="debt-modal-title">Add Record</h3>
+                <button class="modal-close" onclick="closeDebtModal()"><i class="ri-close-line"></i></button>
+            </div>
+            <form onsubmit="saveDebt(event)">
+                <input type="hidden" id="debt-edit-id">
+                <div class="form-group">
+                    <label>Type</label>
+                    <div class="debt-type-toggle">
+                        <label class="debt-type-option">
+                            <input type="radio" name="debt-type" value="lent" checked>
+                            <span class="debt-type-btn lent-btn"><i class="ri-arrow-up-line"></i> I Lent</span>
+                        </label>
+                        <label class="debt-type-option">
+                            <input type="radio" name="debt-type" value="borrowed">
+                            <span class="debt-type-btn borrowed-btn"><i class="ri-arrow-down-line"></i> I
+                                Borrowed</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Person Name</label>
+                    <div class="input-wrapper">
+                        <i class="ri-user-3-line"></i>
+                        <input type="text" id="debt-person" placeholder="e.g. John" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Amount</label>
+                        <div class="input-wrapper">
+                            <i class="ri-money-dollar-circle-line"></i>
+                            <input type="number" id="debt-amount" placeholder="0.00" step="0.01" min="0.01" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <div class="input-wrapper">
+                            <i class="ri-checkbox-circle-line"></i>
+                            <select id="debt-status" required>
+                                <option value="pending">Pending</option>
+                                <option value="repaid">Repaid</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date</label>
+                        <div class="input-wrapper">
+                            <i class="ri-calendar-line"></i>
+                            <input type="date" id="debt-date" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Due Date (optional)</label>
+                        <div class="input-wrapper">
+                            <i class="ri-calendar-check-line"></i>
+                            <input type="date" id="debt-due-date">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Note / Reason (optional)</label>
+                    <div class="input-wrapper">
+                        <i class="ri-sticky-note-line"></i>
+                        <input type="text" id="debt-note" placeholder="e.g. Shared rent for March">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Save Record</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Group Modal (Create/Edit Group) -->
+    <div id="group-modal" class="modal-overlay" style="display:none">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="group-modal-title">Create Group</h3>
+                <button class="modal-close" onclick="closeGroupModal()"><i class="ri-close-line"></i></button>
+            </div>
+            <form onsubmit="saveGroup(event)">
+                <input type="hidden" id="group-edit-id">
+                <div class="form-group">
+                    <label>Group / Trip Name</label>
+                    <div class="input-wrapper">
+                        <i class="ri-map-pin-line"></i>
+                        <input type="text" id="group-name" placeholder="e.g. Cox's Bazar Trip" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Members (comma-separated names)</label>
+                    <div class="input-wrapper">
+                        <i class="ri-user-3-line"></i>
+                        <input type="text" id="group-members" placeholder="e.g. Rahim, Karim, Anik" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Save Group</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Group Expense Modal -->
+    <div id="group-expense-modal" class="modal-overlay" style="display:none">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="group-expense-modal-title">Add Expense</h3>
+                <button class="modal-close" onclick="closeGroupExpenseModal()"><i class="ri-close-line"></i></button>
+            </div>
+            <form onsubmit="saveGroupExpense(event)">
+                <input type="hidden" id="group-expense-edit-id">
+                <input type="hidden" id="group-expense-group-id">
+                <div class="form-group">
+                    <label>Description</label>
+                    <div class="input-wrapper">
+                        <i class="ri-file-text-line"></i>
+                        <input type="text" id="group-expense-desc" placeholder="e.g. Lunch, Bus fare" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Amount</label>
+                        <div class="input-wrapper">
+                            <i class="ri-money-dollar-circle-line"></i>
+                            <input type="number" id="group-expense-amount" placeholder="0.00" step="0.01" min="0.01" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Paid By</label>
+                        <div class="input-wrapper">
+                            <i class="ri-user-line"></i>
+                            <select id="group-expense-paidby" required></select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Date (optional)</label>
+                    <div class="input-wrapper">
+                        <i class="ri-calendar-line"></i>
+                        <input type="date" id="group-expense-date">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Save Expense</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
