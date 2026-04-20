@@ -1,4 +1,8 @@
-const firebaseConfig = {
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+
+export const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
@@ -7,12 +11,12 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-const firestoreDatabaseId =
-  import.meta.env.VITE_FIRESTORE_DATABASE_ID || '(default)';
+export const firestoreDatabaseId =
+  import.meta.env.VITE_FIREBASE_DATABASE_ID || '(default)';
 
-function getMissingFirebaseEnvVars() {
+export function getMissingFirebaseEnvVars(): string[] {
   return Object.entries(firebaseConfig)
-    .filter(([, value]) => !value || String(value).trim() === '')
+    .filter(([, value]) => !value)
     .map(([key]) => key);
 }
 
@@ -24,5 +28,8 @@ if (missingKeys.length > 0) {
   );
 }
 
-export { firebaseConfig, firestoreDatabaseId, getMissingFirebaseEnvVars };
-export default firebaseConfig;
+const app = initializeApp(firebaseConfig);
+
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export default app;
