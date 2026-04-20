@@ -9,7 +9,9 @@ const db = firebase.firestore();
 
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-const googleProvider = new firebase.auth.GoogleAuthProvider();
+function getGoogleProvider() {
+    return new firebase.auth.GoogleAuthProvider();
+}
 
 // ============================================================
 // CONSTANTS
@@ -31,10 +33,10 @@ const CURRENCY_SYMBOLS = { USD: '$', EUR: '\u20AC', GBP: '\u00A3', INR: '\u20B9'
 const TIPS = [
     "Track every expense, no matter how small!",
     "Try the 50/30/20 rule: 50% needs, 30% wants, 20% savings.",
-    "Cook at home more \u2014 it saves a lot!",
+    "Cook at home more — it saves a lot!",
     "Use student discounts whenever possible.",
     "Set up automatic savings transfers on payday.",
-    "Review your subscriptions \u2014 cancel what you don\u2019t use.",
+    "Review your subscriptions — cancel what you don’t use.",
     "Plan meals ahead to reduce food waste and spending.",
     "Buy used textbooks or use the library.",
     "Walk or bike instead of taking transport when possible.",
@@ -73,7 +75,7 @@ function debouncedRefresh() {
     clearTimeout(pendingRefreshTimer);
     pendingRefreshTimer = setTimeout(function () {
         refreshAll();
-    }, 100);
+    }, 30);
 }
 
 function subscribeToUserData() {
@@ -198,6 +200,10 @@ function isToday(dateStr) {
 function showToast(message, type) {
     type = type || 'info';
     const container = document.getElementById('toast-container');
+    if (!container) {
+        console.log(type + ': ' + message);
+        return;
+    }
     const icons = { success: 'ri-check-line', error: 'ri-error-warning-line', warning: 'ri-alert-line', info: 'ri-information-line' };
     const toast = document.createElement('div');
     toast.className = 'toast ' + type;
@@ -228,14 +234,24 @@ function addNotification(text) {
 }
 
 function clearNotifications() {
-    document.getElementById('notif-badge').style.display = 'none';
-    document.getElementById('notif-badge').textContent = '0';
-    document.getElementById('notif-list').innerHTML = '<p class="notif-empty">No notifications</p>';
-    document.getElementById('notif-panel').style.display = 'none';
+    const badge = document.getElementById('notif-badge');
+    const list = document.getElementById('notif-list');
+    const panel = document.getElementById('notif-panel');
+    if (badge) {
+        badge.style.display = 'none';
+        badge.textContent = '0';
+    }
+    if (list) {
+        list.innerHTML = '<p class="notif-empty">No notifications</p>';
+    }
+    if (panel) {
+        panel.style.display = 'none';
+    }
 }
 
 function toggleNotifications() {
     const panel = document.getElementById('notif-panel');
+    if (!panel) return;
     panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
 }
 
@@ -251,27 +267,43 @@ document.addEventListener('click', function (e) {
 // AUTH - GOOGLE SIGN-IN VIA FIREBASE
 // ============================================================
 function showAuth() {
-    document.getElementById('auth-modal').style.display = 'flex';
+    const modal = document.getElementById('auth-modal');
+    if (modal) modal.style.display = 'flex';
 }
 
 function closeAuth() {
-    document.getElementById('auth-modal').style.display = 'none';
+    const modal = document.getElementById('auth-modal');
+    if (modal) modal.style.display = 'none';
 }
 
 function handleGoogleSignIn() {
-    auth.signInWithPopup(googleProvider)
+    const provider = getGoogleProvider();
+
+    console.log('Starting Google sign-in...');
+    console.log('Provider:', provider);
+    console.log('Auth object:', auth);
+
+    auth.signInWithPopup(provider)
         .then(function () {
             closeAuth();
+            showToast('Signed in successfully', 'success');
         })
         .catch(function (error) {
+            console.error('Google Sign-In FULL error:', error);
+            console.error('Error code:', error?.code);
+            console.error('Error message:', error?.message);
+            console.error('Error customData:', error?.customData);
+
             if (error.code === 'auth/popup-closed-by-user') {
                 showToast('Sign-in was cancelled', 'warning');
             } else if (error.code === 'auth/unauthorized-domain') {
-                showToast('This domain is not authorized. Add it in Firebase Console > Authentication > Settings.', 'error');
-                console.error('Unauthorized domain. Add your domain to Firebase Auth authorized domains.');
+                showToast('This domain is not authorized. Add localhost and 127.0.0.1 in Firebase Console > Authentication > Settings.', 'error');
+            } else if (error.code === 'auth/operation-not-allowed') {
+                showToast('Google sign-in is not enabled in Firebase Console.', 'error');
+            } else if (error.code === 'auth/argument-error') {
+                showToast('Google sign-in argument error. Check console.', 'error');
             } else {
-                console.error('Google Sign-In error:', error);
-                showToast('Sign-in failed: ' + error.message, 'error');
+                showToast('Sign-in failed: ' + (error.message || 'Unknown error'), 'error');
             }
         });
 }
@@ -290,8 +322,10 @@ function logout() {
     authInitialized = false;
 
     auth.signOut().then(function () {
-        document.getElementById('app-container').style.display = 'none';
-        document.getElementById('landing-page').style.display = 'block';
+        const appContainer = document.getElementById('app-container');
+        const landingPage = document.getElementById('landing-page');
+        if (appContainer) appContainer.style.display = 'none';
+        if (landingPage) landingPage.style.display = 'block';
         showToast('Logged out successfully', 'info');
     }).catch(function (error) {
         console.error('Logout error:', error);
@@ -545,8 +579,13 @@ auth.onAuthStateChanged(async function (firebaseUser) {
         enterApp();
 
         try {
-            await loadUserData();
+            // First start realtime listeners
             subscribeToUserData();
+
+            // Then load initial data once
+            await loadUserData();
+
+            // Fast first paint
             refreshAll();
         } catch (e) {
             console.error('Firestore load error:', e);
@@ -946,8 +985,10 @@ function closeExpenseModal() {
 
 async function saveExpense(e) {
     e.preventDefault();
+
     var editId = document.getElementById('expense-edit-id').value;
     var isNew = !editId;
+
     var expense = {
         id: editId || generateId(),
         description: document.getElementById('expense-desc').value.trim(),
@@ -957,20 +998,26 @@ async function saveExpense(e) {
         recurring: document.getElementById('expense-recurring').value,
         notes: document.getElementById('expense-notes').value.trim()
     };
-    if (!await saveExpenseToFirestore(expense, isNew)) return;
+
+    // Close immediately for faster UX
+    closeExpenseModal();
+
+    const saved = await saveExpenseToFirestore(expense, isNew);
+    if (!saved) {
+        showToast('Failed to sync expense to cloud', 'error');
+        return;
+    }
+
+    // Do NOT push/update local state manually
+    // Firestore onSnapshot will update state automatically
     if (editId) {
-        var idx = state.expenses.findIndex(function (ex) { return ex.id === editId; });
-        if (idx !== -1) state.expenses[idx] = expense;
         showToast('Expense updated and synced!', 'success');
     } else {
-        state.expenses.push(expense);
         showToast('Expense added and synced!', 'success');
         if (expense.recurring !== 'none') {
-            addNotification('\uD83D\uDCCC Recurring expense "' + expense.description + '" set as ' + expense.recurring);
+            addNotification('📌 Recurring expense "' + expense.description + '" set as ' + expense.recurring);
         }
     }
-    closeExpenseModal();
-    refreshAll();
 }
 
 async function deleteExpense(id) {
@@ -1061,13 +1108,16 @@ function closeBudgetModal() {
 
 async function saveBudget(e) {
     e.preventDefault();
+
     var editId = document.getElementById('budget-edit-id').value;
     var isNew = !editId;
+
     var budget = {
         id: editId || generateId(),
         category: document.getElementById('budget-category').value,
         amount: parseFloat(document.getElementById('budget-amount').value)
     };
+
     if (!editId) {
         var existing = state.budgets.find(function (b) { return b.category === budget.category; });
         if (existing) {
@@ -1075,24 +1125,16 @@ async function saveBudget(e) {
             isNew = false;
         }
     }
-    if (!await saveBudgetToFirestore(budget, isNew)) return;
-    if (editId) {
-        var idx = state.budgets.findIndex(function (b) { return b.id === editId; });
-        if (idx !== -1) state.budgets[idx] = budget;
-        showToast('Budget updated and synced!', 'success');
-    } else {
-        var existingBudget = state.budgets.find(function (b) { return b.id === budget.id; });
-        if (existingBudget) {
-            existingBudget.amount = budget.amount;
-            existingBudget.category = budget.category;
-            showToast('Budget updated for this category and synced!', 'success');
-        } else {
-            state.budgets.push(budget);
-            showToast('Budget set and synced!', 'success');
-        }
-    }
+
     closeBudgetModal();
-    refreshAll();
+
+    const saved = await saveBudgetToFirestore(budget, isNew);
+    if (!saved) {
+        showToast('Failed to sync budget to cloud', 'error');
+        return;
+    }
+
+    showToast('Budget synced successfully!', 'success');
 }
 
 async function deleteBudget(id) {
@@ -1202,31 +1244,33 @@ function closeSavingsModal() {
 
 async function saveSavingsGoal(e) {
     e.preventDefault();
+
     var editId = document.getElementById('savings-edit-id').value;
     var isNew = !editId;
     var iconRadio = document.querySelector('input[name="savings-icon"]:checked');
+
     var goal = {
         id: editId || generateId(),
         name: document.getElementById('savings-name').value.trim(),
         target: parseFloat(document.getElementById('savings-target').value),
         current: parseFloat(document.getElementById('savings-current').value) || 0,
         deadline: document.getElementById('savings-deadline').value || null,
-        icon: iconRadio ? iconRadio.value : '\u{1F3AF}'
+        icon: iconRadio ? iconRadio.value : '🎯'
     };
-    if (!await saveSavingsGoalToFirestore(goal, isNew)) return;
-    if (editId) {
-        var idx = state.savingsGoals.findIndex(function (g) { return g.id === editId; });
-        if (idx !== -1) state.savingsGoals[idx] = goal;
-        showToast('Goal updated and synced!', 'success');
-    } else {
-        state.savingsGoals.push(goal);
-        showToast('Savings goal created and synced!', 'success');
-    }
-    if (goal.current >= goal.target) {
-        addNotification('\uD83C\uDF89 Congratulations! You reached your "' + goal.name + '" savings goal!');
-    }
+
     closeSavingsModal();
-    refreshAll();
+
+    const saved = await saveSavingsGoalToFirestore(goal, isNew);
+    if (!saved) {
+        showToast('Failed to sync savings goal to cloud', 'error');
+        return;
+    }
+
+    showToast(isNew ? 'Savings goal created and synced!' : 'Goal updated and synced!', 'success');
+
+    if (goal.current >= goal.target) {
+        addNotification('🎉 Congratulations! You reached your "' + goal.name + '" savings goal!');
+    }
 }
 
 async function deleteSavingsGoal(id) {
@@ -1560,9 +1604,11 @@ function closeDebtModal() {
 
 async function saveDebt(e) {
     e.preventDefault();
+
     var editId = document.getElementById('debt-edit-id').value;
     var isNew = !editId;
     var typeRadio = document.querySelector('input[name="debt-type"]:checked');
+
     var debt = {
         id: editId || generateId(),
         type: typeRadio ? typeRadio.value : 'lent',
@@ -1573,39 +1619,60 @@ async function saveDebt(e) {
         note: document.getElementById('debt-note').value.trim(),
         status: document.getElementById('debt-status').value
     };
-    if (!await saveDebtToFirestore(debt, isNew)) return;
-    if (editId) {
-        var idx = state.debts.findIndex(function (d) { return d.id === editId; });
-        if (idx !== -1) state.debts[idx] = debt;
-        showToast('Record updated and synced!', 'success');
+
+    closeDebtModal();
+
+    const saved = await saveDebtToFirestore(debt, isNew);
+    if (!saved) {
+        showToast('Failed to sync debt record to cloud', 'error');
+        return;
+    }
+
+    // local UI update without duplicate
+    const existingIndex = state.debts.findIndex(function (d) {
+        return d.id === debt.id;
+    });
+
+    if (existingIndex !== -1) {
+        state.debts[existingIndex] = debt;
     } else {
         state.debts.push(debt);
-        showToast('Record added and synced!', 'success');
     }
-    closeDebtModal();
-    refreshAll();
+
+    updateDebtsPage();
+    updateDashboard();
+
+    showToast(isNew ? 'Record added and synced!' : 'Record updated and synced!', 'success');
 }
 
 async function deleteDebt(id) {
     if (!await deleteDebtFromFirestore(id)) return;
+
     state.debts = state.debts.filter(function (d) { return d.id !== id; });
+
+    updateDebtsPage();
+    updateDashboard();
+
     showToast('Record deleted from cloud', 'warning');
-    refreshAll();
 }
 
 async function markDebtRepaid(id) {
     var debt = state.debts.find(function (d) { return d.id === id; });
-    if (debt) {
-        try {
-            await debtsCollectionRef().doc(id).update({ status: 'repaid' });
-        } catch (err) {
-            console.error('Failed to update debt status:', err);
-            showToast('Failed to sync status update', 'error');
-            return;
-        }
+    if (!debt) return;
+
+    try {
+        await debtsCollectionRef().doc(id).update({ status: 'repaid' });
+
+        // local sync
         debt.status = 'repaid';
+
+        updateDebtsPage();
+        updateDashboard();
+
         showToast('Marked as repaid and synced!', 'success');
-        refreshAll();
+    } catch (err) {
+        console.error('Failed to update debt status:', err);
+        showToast('Failed to sync status update', 'error');
     }
 }
 
@@ -1675,15 +1742,15 @@ function updateDebtsPage() {
             badges += '<span class="debt-badge due-soon"><i class="ri-time-line"></i> Due Soon</span>';
         }
 
-        const dueDateStr = d.dueDate ? ' \u00B7 Due: ' + fmtDate(d.dueDate) : '';
-        const noteStr = d.note ? ' \u00B7 ' + escapeHtml(d.note) : '';
+        const dueDateStr = d.dueDate ? ' • Due: ' + fmtDate(d.dueDate) : '';
+        const noteStr = d.note ? ' • ' + escapeHtml(d.note) : '';
 
         let actions = '';
         if (d.status === 'pending') {
             actions += '<button class="btn-icon btn-sm" onclick="markDebtRepaid(\'' + d.id + '\')" title="Mark Repaid" style="color:var(--success)"><i class="ri-check-line"></i></button>';
+            actions += '<button class="btn-icon btn-sm" onclick="openDebtModal(\'' + d.id + '\')" title="Edit"><i class="ri-edit-line"></i></button>';
+            actions += '<button class="btn-icon btn-sm" onclick="deleteDebt(\'' + d.id + '\')" title="Delete" style="color:var(--danger)"><i class="ri-delete-bin-line"></i></button>';
         }
-        actions += '<button class="btn-icon btn-sm" onclick="openDebtModal(\'' + d.id + '\')" title="Edit"><i class="ri-edit-line"></i></button>';
-        actions += '<button class="btn-icon btn-sm" onclick="deleteDebt(\'' + d.id + '\')" title="Delete" style="color:var(--danger)"><i class="ri-delete-bin-line"></i></button>';
 
         return '<div class="debt-item' + (overdue ? ' overdue' : '') + '" style="animation-delay:' + (i * 0.03) + 's">' +
             '<div class="debt-type-indicator ' + typeClass + '"><i class="' + typeIcon + '"></i></div>' +
@@ -1691,8 +1758,8 @@ function updateDebtsPage() {
             '<div class="debt-item-person">' + escapeHtml(d.person) + ' ' + badges + '</div>' +
             '<div class="debt-item-meta">' +
             '<span>' + fmtDate(d.date) + '</span>' +
-            '<span>' + dueDateStr + '</span>' +
-            '<span>' + noteStr + '</span>' +
+            (d.dueDate ? '<span>' + dueDateStr + '</span>' : '') +
+            (d.note ? '<span>' + noteStr + '</span>' : '') +
             '</div>' +
             '</div>' +
             '<span class="debt-item-amount ' + typeClass + '">' + sign + fmt(d.amount) + '</span>' +
@@ -1759,31 +1826,35 @@ function closeGroupModal() {
 
 async function saveGroup(e) {
     e.preventDefault();
+
     var editId = document.getElementById('group-edit-id').value;
-    var membersRaw = document.getElementById('group-members').value;
-    var members = membersRaw.split(',').map(function (m) { return m.trim(); }).filter(function (m) { return m.length > 0; });
-    if (members.length < 2) {
-        showToast('Add at least 2 members', 'warning');
-        return;
-    }
-    var existing = editId ? state.groups.find(function (g) { return g.id === editId; }) : null;
+    var isNew = !editId;
+
+    var name = document.getElementById('group-name').value.trim();
+    var memberInputs = document.querySelectorAll('.group-member-input');
+
+    var members = Array.from(memberInputs)
+        .map(function (input) { return input.value.trim(); })
+        .filter(function (name) { return name.length > 0; });
+
     var group = {
         id: editId || generateId(),
-        name: document.getElementById('group-name').value.trim(),
+        name: name,
         members: members,
-        expenses: existing ? existing.expenses : []
+        expenses: editId
+            ? (state.groups.find(function (g) { return g.id === editId; })?.expenses || [])
+            : []
     };
-    if (!await saveGroupToFirestore(group)) return;
-    if (editId) {
-        var idx = state.groups.findIndex(function (g) { return g.id === editId; });
-        if (idx !== -1) state.groups[idx] = group;
-        showToast('Group updated and synced!', 'success');
-    } else {
-        state.groups.push(group);
-        showToast('Group created and synced!', 'success');
-    }
+
     closeGroupModal();
-    updateGroupPage();
+
+    const saved = await saveGroupToFirestore(group, isNew);
+    if (!saved) {
+        showToast('Failed to sync group to cloud', 'error');
+        return;
+    }
+
+    showToast(isNew ? 'Group created and synced!' : 'Group updated and synced!', 'success');
 }
 
 async function deleteGroup(id) {
@@ -1839,10 +1910,16 @@ function closeGroupExpenseModal() {
 
 async function saveGroupExpense(e) {
     e.preventDefault();
+
     var groupId = document.getElementById('group-expense-group-id').value;
     var editId = document.getElementById('group-expense-edit-id').value;
     var group = state.groups.find(function (g) { return g.id === groupId; });
-    if (!group) return;
+
+    if (!group) {
+        showToast('Group not found', 'error');
+        return;
+    }
+
     var expense = {
         id: editId || generateId(),
         description: document.getElementById('group-expense-desc').value.trim(),
@@ -1850,22 +1927,31 @@ async function saveGroupExpense(e) {
         paidBy: document.getElementById('group-expense-paidby').value,
         date: document.getElementById('group-expense-date').value || new Date().toISOString().split('T')[0]
     };
+
     var nextExpenses = editId
         ? group.expenses.map(function (ex) { return ex.id === editId ? expense : ex; })
         : group.expenses.concat([expense]);
+
     var nextGroup = {
         id: group.id,
         name: group.name,
         members: group.members.slice(),
         expenses: nextExpenses
     };
-    if (!await saveGroupToFirestore(nextGroup)) return;
+
+    if (!await saveGroupToFirestore(nextGroup)) {
+        showToast('Failed to sync expense to cloud', 'error');
+        return;
+    }
+
     group.expenses = nextExpenses;
+
     if (editId) {
         showToast('Expense updated and synced!', 'success');
     } else {
         showToast('Expense added and synced!', 'success');
     }
+
     closeGroupExpenseModal();
     updateGroupPage();
 }
@@ -2153,8 +2239,159 @@ function registerGlobalActions() {
 export function initializeLegacyApp() {
     registerGlobalActions();
     bindModalOverlays();
+
     if (!legacyAppInitialized) {
         legacyAppInitialized = true;
         updateThemeIcon();
     }
+}
+// ============================================================
+// SAFE INIT + EVENT BINDINGS
+// Paste this at the very bottom of src/legacy/legacyApp.ts
+// ============================================================
+
+let __legacyBindingsAttached = false;
+
+function bindFormById(id, handler, name) {
+    const form = document.getElementById(id);
+    if (!form) {
+        console.error(name + ' not found:', id);
+        return;
+    }
+
+    if (form.dataset.bound === 'true') {
+        console.log(name + ' already bound:', id);
+        return;
+    }
+
+    form.addEventListener('submit', function (e) {
+        console.log(name + ' submit triggered');
+        handler(e);
+    });
+
+    form.dataset.bound = 'true';
+    console.log(name + ' listener attached:', id);
+}
+
+function bindClickById(id, handler, name) {
+    const el = document.getElementById(id);
+    if (!el) {
+        console.warn(name + ' not found:', id);
+        return;
+    }
+
+    if (el.dataset.bound === 'true') {
+        console.log(name + ' already bound:', id);
+        return;
+    }
+
+    el.addEventListener('click', function (e) {
+        console.log(name + ' click triggered');
+        handler(e);
+    });
+
+    el.dataset.bound = 'true';
+    console.log(name + ' listener attached:', id);
+}
+
+function bindChangeById(id, handler, name) {
+    const el = document.getElementById(id);
+    if (!el) {
+        console.warn(name + ' not found:', id);
+        return;
+    }
+
+    if (el.dataset.bound === 'true') {
+        console.log(name + ' already bound:', id);
+        return;
+    }
+
+    el.addEventListener('change', function (e) {
+        console.log(name + ' change triggered');
+        handler(e);
+    });
+
+    el.dataset.bound = 'true';
+    console.log(name + ' listener attached:', id);
+}
+
+function attachGlobalFunctions() {
+    window.handleGoogleSignIn = handleGoogleSignIn;
+    window.logout = logout;
+    window.openExpenseModal = openExpenseModal;
+    window.closeExpenseModal = closeExpenseModal;
+    window.deleteExpense = deleteExpense;
+    window.filterExpenses = filterExpenses;
+
+    window.openBudgetModal = openBudgetModal;
+    window.closeBudgetModal = closeBudgetModal;
+    window.deleteBudget = deleteBudget;
+    window.changeBudgetMonth = changeBudgetMonth;
+
+    window.openSavingsModal = openSavingsModal;
+    window.closeSavingsModal = closeSavingsModal;
+    window.deleteSavingsGoal = deleteSavingsGoal;
+    window.openAddSavingsModal = openAddSavingsModal;
+    window.closeAddSavingsModal = closeAddSavingsModal;
+
+    window.openDebtModal = openDebtModal;
+    window.closeDebtModal = closeDebtModal;
+    window.deleteDebt = deleteDebt;
+    window.markDebtRepaid = markDebtRepaid;
+
+    window.openGroupModal = openGroupModal;
+    window.closeGroupModal = closeGroupModal;
+    window.saveGroup = saveGroup;
+    window.deleteGroup = deleteGroup;
+    window.viewGroup = viewGroup;
+    window.backToGroupList = backToGroupList;
+
+    window.openGroupExpenseModal = openGroupExpenseModal;
+    window.closeGroupExpenseModal = closeGroupExpenseModal;
+    window.saveGroupExpense = saveGroupExpense;
+    window.navigateTo = navigateTo;
+    window.toggleTheme = toggleTheme;
+    window.toggleSidebar = toggleSidebar;
+    window.toggleNotifications = toggleNotifications;
+    window.clearNotifications = clearNotifications;
+
+    console.log('Global window functions attached');
+}
+
+function bindCoreEventListeners() {
+    if (__legacyBindingsAttached) {
+        console.log('Core bindings already attached');
+        return;
+    }
+
+    console.log('bindCoreEventListeners() started');
+
+    attachGlobalFunctions();
+
+    bindFormById('expense-form', saveExpense, 'expense-form');
+    bindFormById('budget-form', saveBudget, 'budget-form');
+    bindFormById('savings-form', saveSavingsGoal, 'savings-form');
+    bindFormById('add-savings-form', addToSavings, 'add-savings-form');
+    bindFormById('debt-form', saveDebt, 'debt-form');
+    bindFormById('group-form', saveGroup, 'group-form');
+    bindFormById('group-expense-form', saveGroupExpense, 'group-expense-form');
+
+    bindChangeById('currency-select', function (e) {
+        changeCurrency(e.target.value);
+    }, 'currency-select');
+
+    bindClickById('theme-toggle', function () {
+        toggleTheme();
+    }, 'theme-toggle');
+
+    bindClickById('logout-btn', function () {
+        logout();
+    }, 'logout-btn');
+
+    bindClickById('notif-clear-btn', function () {
+        clearNotifications();
+    }, 'notif-clear-btn');
+
+    __legacyBindingsAttached = true;
+    console.log('bindCoreEventListeners() completed');
 }

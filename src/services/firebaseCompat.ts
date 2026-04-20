@@ -1,16 +1,8 @@
 // @ts-nocheck
-import { initializeApp } from 'firebase/app';
-import {
-  GoogleAuthProvider,
-  browserLocalPersistence,
-  getAuth,
-  indexedDBLocalPersistence,
-  initializeAuth,
-  onAuthStateChanged,
-  setPersistence,
-  signInWithPopup,
-  signOut,
-} from 'firebase/auth';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
   collection,
   deleteDoc,
@@ -23,20 +15,30 @@ import {
   setDoc,
   updateDoc,
 } from 'firebase/firestore';
-import { firebaseConfig } from '../firebase';
 
-const app = initializeApp(firebaseConfig);
-const authInstance = (() => {
-  try {
-    return initializeAuth(app, {
-      persistence: [indexedDBLocalPersistence, browserLocalPersistence],
-    });
-  } catch (error) {
-    return getAuth(app);
-  }
-})();
-const dbInstance = getFirestore(app);
+import {
+  firebaseConfig,
+  firestoreDatabaseId,
+} from '../firebase';
 
+// ------------------------------------------------------------
+// AUTH: use compat auth because legacyApp.ts is written in compat style
+// ------------------------------------------------------------
+const compatApp = firebase.apps.length
+  ? firebase.app()
+  : firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+
+// ------------------------------------------------------------
+// FIRESTORE: use modular firestore with NAMED DATABASE support
+// ------------------------------------------------------------
+const modularApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const dbInstance = getFirestore(modularApp, firestoreDatabaseId);
+
+// ------------------------------------------------------------
+// Snapshot wrappers to mimic compat behavior
+// ------------------------------------------------------------
 type LegacyDocSnapshot = {
   id?: string;
   exists: boolean;
@@ -71,6 +73,9 @@ function wrapQuerySnapshot(snapshot: any): LegacyQuerySnapshot {
   };
 }
 
+// ------------------------------------------------------------
+// Compat-like Firestore refs
+// ------------------------------------------------------------
 class LegacyDocRef {
   constructor(private readonly path: string[]) {}
 
@@ -82,11 +87,11 @@ class LegacyDocRef {
     return wrapDocSnapshot(await getDoc(doc(dbInstance, ...this.path)));
   }
 
-  async set(data: Record<string, unknown>, options?: { merge?: boolean }) {
+  async set(data: Record<string, any>, options?: { merge?: boolean }) {
     await setDoc(doc(dbInstance, ...this.path), data, options);
   }
 
-  async update(data: Record<string, unknown>) {
+  async update(data: Record<string, any>) {
     await updateDoc(doc(dbInstance, ...this.path), data);
   }
 
@@ -119,53 +124,34 @@ class LegacyCollectionRef {
   }
 }
 
-const legacyAuth = {
-  get currentUser() {
-    return authInstance.currentUser;
-  },
-  setPersistence(mode: string) {
-    if (mode !== 'local') {
-      return Promise.resolve();
-    }
-    return setPersistence(authInstance, browserLocalPersistence);
-  },
-  signInWithPopup(provider: GoogleAuthProvider) {
-    return signInWithPopup(authInstance, provider);
-  },
-  signOut() {
-    return signOut(authInstance);
-  },
-  onAuthStateChanged(callback: (user: any) => void) {
-    return onAuthStateChanged(authInstance, callback);
-  },
-};
-
-export const firebase = {
-  initializeApp() {
-    return app;
-  },
-  auth: Object.assign(() => legacyAuth, {
-    Auth: {
-      Persistence: {
-        LOCAL: 'local',
+// ------------------------------------------------------------
+// Compat-like firebase object used by legacyApp.ts
+// ------------------------------------------------------------
+const firestoreCompatLike = Object.assign(
+  function () {
+    return {
+      collection(name: string) {
+        return new LegacyCollectionRef([name]);
       },
-    },
-    GoogleAuthProvider,
-  }),
-  firestore: Object.assign(() => ({
-    collection(name: string) {
-      return new LegacyCollectionRef([name]);
-    },
-  }), {
+    };
+  },
+  {
     FieldValue: {
       serverTimestamp,
     },
-  }),
+  }
+);
+
+const firebaseCompatLike = {
+  ...firebase,
+  firestore: firestoreCompatLike,
 };
 
-export const auth = legacyAuth;
-export const db = {
+const db = {
   collection(name: string) {
     return new LegacyCollectionRef([name]);
   },
 };
+
+export { firebaseCompatLike as firebase, auth, db };
+export default firebaseCompatLike;

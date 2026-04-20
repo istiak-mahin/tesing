@@ -701,6 +701,9 @@ body {
     display: flex;
     flex-direction: column;
     transition: all var(--transition-slow);
+
+    /* 🔥 ADD THIS */
+    overflow: hidden;
 }
 
 .sidebar.collapsed {
@@ -774,6 +777,10 @@ body {
     display: flex;
     flex-direction: column;
     gap: 4px;
+
+    /* 🔥 IMPORTANT */
+    overflow-y: auto;
+    min-height: 0;
 }
 
 .nav-item {
@@ -821,6 +828,8 @@ body {
 .sidebar-footer {
     padding: 12px;
     border-top: 1px solid var(--border);
+    flex-shrink: 0;
+    background: var(--bg-secondary);
 }
 
 .sidebar-tip {
@@ -3127,4 +3136,96 @@ body {
 .sidebar-overlay.active {
     display: block;
     animation: fadeIn 0.2s ease;
+}
+
+.sidebar-nav {
+    scroll-behavior: smooth;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+        width: var(--sidebar-width);
+        z-index: 100;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .sidebar.mobile-open {
+        transform: translateX(0);
+    }
+
+    .sidebar-nav {
+        overflow-y: auto;
+        min-height: 0;
+        padding-bottom: 140px;
+    }
+
+    .sidebar-footer {
+        position: sticky;
+        bottom: 0;
+        background: var(--bg-secondary);
+        z-index: 2;
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+        padding-bottom: 70px;
+    }
+
+    .mobile-menu-btn {
+        display: flex !important;
+    }
+
+    .mobile-nav {
+        display: flex;
+    }
+
+    .hero h1 {
+        font-size: 36px;
+    }
+
+    .hero-actions {
+        flex-direction: column;
+    }
+
+    .hero-stats {
+        gap: 24px;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .landing-nav {
+        padding: 12px 20px;
+    }
+
+    .summary-cards {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .card-value {
+        font-size: 22px;
+    }
+
+    .budget-overview-card {
+        grid-template-columns: 1fr;
+    }
+
+    .savings-total-banner {
+        grid-template-columns: 1fr;
+    }
+
+    .analytics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .debt-summary-cards {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .group-list {
+        grid-template-columns: 1fr;
+    }
 }
