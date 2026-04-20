@@ -7,24 +7,18 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
-
-    // 🔥 VERY IMPORTANT for GitHub Pages
     base: '/tesing/',
-
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
     },
-
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
       },
     },
-
     server: {
       hmr: process.env.DISABLE_HMR !== 'true',
     },
-
     build: {
       outDir: 'dist',
     },
